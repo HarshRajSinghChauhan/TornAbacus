@@ -49,3 +49,6 @@ Thumbs.db
 
 # Turbo
 .turbo
+
+# Scratch / Local Testing
+scratch/
