@@ -17,6 +17,7 @@ import {
   clearStoredApiKey,
   testApiKey,
   fetchUserLogs,
+  getMaxPagesForPreset,
 } from "@/lib/tornApi";
 import { getTimeRangeTimestamps } from "@/lib/time";
 import { processTornLogs } from "@/lib/logParser";
@@ -30,7 +31,7 @@ export default function Dashboard() {
   const [playerInfo, setPlayerInfo] = useState(null);
   const [isTestingKey, setIsTestingKey] = useState(false);
 
-  const [activePreset, setActivePreset] = useState("last7d");
+  const [activePreset, setActivePreset] = useState("today");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [rangeDetails, setRangeDetails] = useState(null);
 
@@ -44,7 +45,7 @@ export default function Dashboard() {
     if (stored) {
       setApiKey(stored);
       setIsDemoMode(false);
-      validateAndFetch(stored, "last7d");
+      validateAndFetch(stored, "today");
     } else {
       // If no key found, activate demo mode so the user immediately gets a rich dashboard
       setIsDemoMode(true);
@@ -93,7 +94,8 @@ export default function Dashboard() {
         );
         setRangeDetails(timestamps);
 
-        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to);
+        const maxPages = getMaxPagesForPreset(presetToUse);
+        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to, maxPages);
         const parsed = processTornLogs(logs);
         setLedgerData(parsed);
       } catch (err) {
@@ -140,7 +142,8 @@ export default function Dashboard() {
         );
         setRangeDetails(timestamps);
 
-        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to);
+        const maxPages = getMaxPagesForPreset(presetToUse);
+        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to, maxPages);
         const parsed = processTornLogs(logs);
         setLedgerData(parsed);
       } catch (err) {
@@ -229,7 +232,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-150">
       
       {/* Sticky Top Header with Dual Clocks & Key Controls */}
       <Header
@@ -276,11 +279,11 @@ export default function Dashboard() {
 
         {/* Demo Mode Notice Banner if Active */}
         {isDemoMode && (
-          <div className="w-full bg-amber-950/20 border border-amber-800/40 rounded-xl p-3 sm:p-4 my-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-amber-200/90 shadow-sm">
+          <div className="w-full bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3 sm:p-4 my-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200/90 shadow-sm transition-colors duration-150">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
               <div>
-                <span className="font-semibold text-amber-300">Demo Mode Active:</span> Showing realistic sample travel runs across Switzerland, UAE, Cayman, UK, Japan, and South Africa.
+                <span className="font-semibold text-amber-800 dark:text-amber-300">Demo Mode Active:</span> Showing realistic sample travel runs across Switzerland, UAE, Cayman, UK, Japan, and South Africa.
               </div>
             </div>
 
@@ -291,7 +294,7 @@ export default function Dashboard() {
                     type="password"
                     placeholder="Enter Full Access Key"
                     id="banner-key-input"
-                    className="px-2.5 py-1 text-xs bg-slate-900 border border-amber-700/60 focus:border-emerald-500 rounded-lg text-white font-mono placeholder-slate-500 w-full sm:w-48"
+                    className="px-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 focus:border-emerald-500 rounded-lg text-slate-900 dark:text-white font-mono placeholder-slate-400 dark:placeholder-slate-500 w-full sm:w-48"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && e.target.value.trim()) {
                         handleSaveKey(e.target.value.trim());
@@ -305,7 +308,7 @@ export default function Dashboard() {
                         handleSaveKey(el.value.trim());
                       }
                     }}
-                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs whitespace-nowrap transition-colors"
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs whitespace-nowrap transition-colors shadow-sm"
                   >
                     Load Live Account
                   </button>
@@ -316,7 +319,7 @@ export default function Dashboard() {
                     setIsDemoMode(false);
                     validateAndFetch(apiKey);
                   }}
-                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition-colors"
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition-colors shadow-sm"
                 >
                   Switch to Live Account ({playerInfo?.name || "Connected"})
                 </button>
@@ -325,7 +328,7 @@ export default function Dashboard() {
                 href="https://www.torn.com/preferences.php#tab=api"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[11px] text-amber-400/80 hover:text-amber-300 flex items-center gap-1 underline underline-offset-2 ml-1"
+                className="text-[11px] text-amber-700 dark:text-amber-400/80 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1 underline underline-offset-2 ml-1"
               >
                 <span>Get Key</span>
                 <ExternalLink className="w-3 h-3" />
@@ -336,12 +339,12 @@ export default function Dashboard() {
 
         {/* Empty Key Prompt if not demo and no key */}
         {!isDemoMode && !apiKey && (
-          <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-8 my-8 text-center max-w-xl mx-auto shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
+          <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 my-8 text-center max-w-xl mx-auto shadow-xl transition-colors duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
               <Plane className="w-6 h-6 transform -rotate-12" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Connect Your Torn City Account</h2>
-            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Connect Your Torn City Account</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
               To analyze your travel runs, overseas inventory acquisitions, and bazaar revenues, enter a Torn API key with <strong>Full Access</strong> permissions (required by Torn for activity logs).
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -351,7 +354,7 @@ export default function Dashboard() {
                   setKeyStatus("demo");
                   loadDemoData();
                 }}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-lg bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/30 transition-all flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Explore With Demo Data</span>
@@ -360,7 +363,7 @@ export default function Dashboard() {
                 href="https://www.torn.com/preferences.php#tab=api"
                 target="_blank"
                 rel="noreferrer"
-                className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <span>Get API Key on Torn.com</span>
                 <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
@@ -396,10 +399,10 @@ export default function Dashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 dark:border-slate-900 bg-white/60 dark:bg-slate-950/60 py-6 text-center text-xs text-slate-500 transition-colors duration-150">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">TornAbacus</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-400">TornAbacus</span>
             <span>•</span>
             <span>Client-side travel &amp; trading ledger</span>
           </div>

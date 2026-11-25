@@ -69,9 +69,12 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       "Item Name",
       "Country",
       "Qty Bought",
-      "Cost Abroad",
+      "Buy Cost",
       "Avg Buy Price",
       "Qty Sold",
+      "Qty In Stock",
+      "Inventory Value",
+      "COGS",
       "Total Revenue",
       "Avg Sell Price",
       "Fees Paid",
@@ -86,11 +89,14 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       item.costAbroad,
       item.avgBuyPrice,
       item.qtySold,
+      item.qtyInStock,
+      item.inventoryValue,
+      item.costOfGoodsSold,
       item.totalRevenue,
       item.avgSellPrice,
       item.feesPaid,
-      item.netProfit,
-      item.roi.toFixed(1),
+      item.qtySold === 0 && item.qtyBought > 0 ? "In stock" : item.netProfit,
+      item.roi !== null ? item.roi.toFixed(1) : "N/A",
     ]);
 
     const csvContent =
@@ -107,20 +113,20 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
   };
 
   return (
-    <div className="w-full bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 my-6 shadow-sm">
+    <div className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 my-6 shadow-sm transition-colors duration-150">
       
       {/* Table Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-white tracking-tight">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
               Itemized Ledger
             </h2>
-            <span className="text-xs bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded-full border border-slate-700">
+            <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
               {filteredItems.length} items
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Grouped overseas purchases, domestic sales, commission fees, and net profit margins
           </p>
         </div>
@@ -129,13 +135,13 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Filter by item..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none w-44 sm:w-52"
+              className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-emerald-500 rounded-lg text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-44 sm:w-52"
             />
           </div>
 
@@ -144,7 +150,7 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
             <select
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
-              className="px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 text-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
+              className="px-2.5 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
             >
               <option value="all">All Countries</option>
               {availableCountries.map((c) => (
@@ -159,7 +165,7 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
           <button
             onClick={handleExportCsv}
             disabled={filteredItems.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 transition-colors disabled:opacity-50 shadow-sm"
             title="Download CSV Spreadsheet"
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
@@ -172,94 +178,111 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       <div className="overflow-x-auto mt-3">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40 select-none">
+            <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold bg-slate-50 dark:bg-slate-950/40 select-none">
               <th
                 onClick={() => handleSort("name")}
-                className="py-3 px-3 cursor-pointer hover:text-white"
+                className="py-3 px-3 cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 <div className="flex items-center gap-1">
                   <span>Item Name</span>
-                  <ArrowUpDown className="w-3 h-3 text-slate-500" />
+                  <ArrowUpDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                 </div>
               </th>
               <th
                 onClick={() => handleSort("qtyBought")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Qty Bought
               </th>
               <th
                 onClick={() => handleSort("costAbroad")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
-                Cost Abroad
+                Buy Cost
               </th>
               <th
                 onClick={() => handleSort("avgBuyPrice")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Avg Buy
               </th>
               <th
                 onClick={() => handleSort("qtySold")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Qty Sold
               </th>
               <th
+                onClick={() => handleSort("qtyInStock")}
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
+              >
+                In Stock
+              </th>
+              <th
                 onClick={() => handleSort("totalRevenue")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Revenue
               </th>
               <th
                 onClick={() => handleSort("avgSellPrice")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Avg Sell
               </th>
               <th
                 onClick={() => handleSort("feesPaid")}
-                className="py-3 px-2 text-right cursor-pointer hover:text-white"
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 Fees
               </th>
               <th
                 onClick={() => handleSort("netProfit")}
-                className="py-3 px-3 text-right cursor-pointer hover:text-white"
+                className="py-3 px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
-                <div className="flex items-center justify-end gap-1 text-emerald-400">
+                <div className="flex items-center justify-end gap-1 text-emerald-600 dark:text-emerald-400">
                   <span>Net Profit</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
               <th
                 onClick={() => handleSort("roi")}
-                className="py-3 px-3 text-right cursor-pointer hover:text-white"
+                className="py-3 px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
                 ROI %
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-mono">
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
             {filteredItems.length > 0 ? (
               filteredItems.map((item, idx) => {
                 const countryData = getCountryDetails(item.country);
                 const isProfitable = item.netProfit >= 0;
+                const isUnsoldStock = item.qtySold === 0 && item.qtyBought > 0;
 
                 return (
                   <tr
                     key={item.name + idx}
-                    className="hover:bg-slate-800/40 transition-colors group"
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
                   >
-                    {/* Item Name & Country Tag */}
+                    {/* Item Name & Tags */}
                     <td className="py-2.5 px-3 font-sans">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
                           {item.name}
                         </span>
+                        {item.hasNoCostBasis && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
+                            No cost basis
+                          </span>
+                        )}
+                        {item.hasPartialCostBasis && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60" title="Sales exceed recorded purchases in this timeframe">
+                            Partial basis
+                          </span>
+                        )}
                         {item.country && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 border border-slate-700/60">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
                             <span>{countryData?.flag || "✈️"}</span>
                             <span>{item.country}</span>
                           </span>
@@ -268,67 +291,87 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
                     </td>
 
                     {/* Qty Bought */}
-                    <td className="py-2.5 px-2 text-right text-slate-300">
+                    <td className="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300">
                       {formatNumber(item.qtyBought)}
                     </td>
 
-                    {/* Cost Abroad */}
-                    <td className="py-2.5 px-2 text-right text-rose-300">
+                    {/* Buy Cost */}
+                    <td className="py-2.5 px-2 text-right text-rose-600 dark:text-rose-300">
                       {formatMoney(item.costAbroad)}
                     </td>
 
                     {/* Avg Buy */}
-                    <td className="py-2.5 px-2 text-right text-slate-400">
+                    <td className="py-2.5 px-2 text-right text-slate-500 dark:text-slate-400">
                       {item.avgBuyPrice > 0 ? formatMoney(item.avgBuyPrice) : "-"}
                     </td>
 
                     {/* Qty Sold */}
-                    <td className="py-2.5 px-2 text-right text-slate-300">
+                    <td className="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300">
                       {formatNumber(item.qtySold)}
                     </td>
 
+                    {/* In Stock (qty on top, inventory value underneath) */}
+                    <td className="py-2.5 px-2 text-right">
+                      <div className={item.qtyInStock > 0 ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-600"}>
+                        {formatNumber(item.qtyInStock)}
+                      </div>
+                      {item.inventoryValue > 0 && (
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                          {formatMoney(item.inventoryValue)}
+                        </div>
+                      )}
+                    </td>
+
                     {/* Revenue */}
-                    <td className="py-2.5 px-2 text-right text-sky-300 font-semibold">
+                    <td className="py-2.5 px-2 text-right text-sky-600 dark:text-sky-300 font-semibold">
                       {formatMoney(item.totalRevenue)}
                     </td>
 
                     {/* Avg Sell */}
-                    <td className="py-2.5 px-2 text-right text-slate-400">
+                    <td className="py-2.5 px-2 text-right text-slate-500 dark:text-slate-400">
                       {item.avgSellPrice > 0 ? formatMoney(item.avgSellPrice) : "-"}
                     </td>
 
                     {/* Fees Paid */}
-                    <td className="py-2.5 px-2 text-right text-amber-400/90">
+                    <td className="py-2.5 px-2 text-right text-amber-600 dark:text-amber-400/90">
                       {item.feesPaid > 0 ? formatMoney(item.feesPaid) : "$0"}
                     </td>
 
                     {/* Net Profit */}
-                    <td
-                      className={`py-2.5 px-3 text-right font-bold ${
-                        isProfitable ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {formatMoney(item.netProfit, true)}
+                    <td className="py-2.5 px-3 text-right font-bold">
+                      {isUnsoldStock ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-sans">
+                          In stock
+                        </span>
+                      ) : (
+                        <span className={item.netProfit > 0 ? "text-emerald-600 dark:text-emerald-400" : item.netProfit < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}>
+                          {formatMoney(item.netProfit, true)}
+                        </span>
+                      )}
                     </td>
 
                     {/* ROI */}
                     <td className="py-2.5 px-3 text-right">
-                      <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                          isProfitable
-                            ? "bg-emerald-950/70 text-emerald-300 border border-emerald-800/60"
-                            : "bg-rose-950/70 text-rose-300 border border-rose-800/60"
-                        }`}
-                      >
-                        {formatPercent(item.roi)}
-                      </span>
+                      {item.roi === null ? (
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">–</span>
+                      ) : (
+                        <span
+                          className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                            item.roi >= 0
+                              ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60"
+                              : "bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60"
+                          }`}
+                        >
+                          {formatPercent(item.roi)}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={10} className="py-8 text-center text-slate-500 font-sans">
+                <td colSpan={11} className="py-8 text-center text-slate-400 dark:text-slate-500 font-sans">
                   No transaction items found matching your filters.
                 </td>
               </tr>
