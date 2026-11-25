@@ -20,7 +20,7 @@ export default function TransactionStream({ rawEvents = [] }) {
 
   const filters = [
     { id: "ALL", label: "All Activity" },
-    { id: "BOUGHT_ABROAD", label: "✈️ Purchases" },
+    { id: "PURCHASES", label: "🛒 Purchases" },
     { id: "BAZAAR_SALE", label: "🏪 Bazaar" },
     { id: "MARKET_SALE", label: "🏷️ Market" },
     { id: "FLIGHT", label: "🎫 Flights" },
@@ -29,6 +29,9 @@ export default function TransactionStream({ rawEvents = [] }) {
 
   const filteredEvents = rawEvents.filter((ev) => {
     if (filterAction === "ALL") return true;
+    if (filterAction === "PURCHASES" || filterAction === "BOUGHT_ABROAD") {
+      return ev.action === "BOUGHT_ABROAD" || ev.action === "SHOP_BUY";
+    }
     return ev.action === filterAction;
   });
 
@@ -41,7 +44,7 @@ export default function TransactionStream({ rawEvents = [] }) {
     let totalFees = 0;
 
     for (const ev of filteredEvents) {
-      if (ev.action === "BOUGHT_ABROAD" || ev.action === "FLIGHT") {
+      if (ev.action === "BOUGHT_ABROAD" || ev.action === "SHOP_BUY" || ev.action === "FLIGHT") {
         totalExpense += Number(ev.totalCost || 0);
       } else if (ev.action === "BAZAAR_SALE" || ev.action === "MARKET_SALE" || ev.action === "TRADE") {
         totalRevenue += Number(ev.revenue || 0);
@@ -49,7 +52,7 @@ export default function TransactionStream({ rawEvents = [] }) {
       }
     }
 
-    if (filterAction === "BOUGHT_ABROAD") {
+    if (filterAction === "PURCHASES" || filterAction === "BOUGHT_ABROAD") {
       return {
         label: "Total Purchases",
         formatted: `-${formatMoney(totalExpense)}`,

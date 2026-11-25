@@ -69,7 +69,7 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       "Item Name",
       "Country",
       "Qty Bought",
-      "Cost Abroad",
+      "Buy Cost",
       "Avg Buy Price",
       "Qty Sold",
       "Total Revenue",
@@ -192,7 +192,7 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
                 onClick={() => handleSort("costAbroad")}
                 className="py-3 px-2 text-right cursor-pointer hover:text-white"
               >
-                Cost Abroad
+                Buy Cost
               </th>
               <th
                 onClick={() => handleSort("avgBuyPrice")}
