@@ -72,6 +72,9 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       "Buy Cost",
       "Avg Buy Price",
       "Qty Sold",
+      "Qty In Stock",
+      "Inventory Value",
+      "COGS",
       "Total Revenue",
       "Avg Sell Price",
       "Fees Paid",
@@ -86,11 +89,14 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
       item.costAbroad,
       item.avgBuyPrice,
       item.qtySold,
+      item.qtyInStock,
+      item.inventoryValue,
+      item.costOfGoodsSold,
       item.totalRevenue,
       item.avgSellPrice,
       item.feesPaid,
-      item.netProfit,
-      item.roi.toFixed(1),
+      item.qtySold === 0 && item.qtyBought > 0 ? "In stock" : item.netProfit,
+      item.roi !== null ? item.roi.toFixed(1) : "N/A",
     ]);
 
     const csvContent =
@@ -207,6 +213,12 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
                 Qty Sold
               </th>
               <th
+                onClick={() => handleSort("qtyInStock")}
+                className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
+              >
+                In Stock
+              </th>
+              <th
                 onClick={() => handleSort("totalRevenue")}
                 className="py-3 px-2 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
               >
@@ -246,18 +258,29 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
               filteredItems.map((item, idx) => {
                 const countryData = getCountryDetails(item.country);
                 const isProfitable = item.netProfit >= 0;
+                const isUnsoldStock = item.qtySold === 0 && item.qtyBought > 0;
 
                 return (
                   <tr
                     key={item.name + idx}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
                   >
-                    {/* Item Name & Country Tag */}
+                    {/* Item Name & Tags */}
                     <td className="py-2.5 px-3 font-sans">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
                           {item.name}
                         </span>
+                        {item.hasNoCostBasis && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
+                            No cost basis
+                          </span>
+                        )}
+                        {item.hasPartialCostBasis && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60" title="Sales exceed recorded purchases in this timeframe">
+                            Partial basis
+                          </span>
+                        )}
                         {item.country && (
                           <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
                             <span>{countryData?.flag || "✈️"}</span>
@@ -287,6 +310,18 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
                       {formatNumber(item.qtySold)}
                     </td>
 
+                    {/* In Stock (qty on top, inventory value underneath) */}
+                    <td className="py-2.5 px-2 text-right">
+                      <div className={item.qtyInStock > 0 ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-600"}>
+                        {formatNumber(item.qtyInStock)}
+                      </div>
+                      {item.inventoryValue > 0 && (
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                          {formatMoney(item.inventoryValue)}
+                        </div>
+                      )}
+                    </td>
+
                     {/* Revenue */}
                     <td className="py-2.5 px-2 text-right text-sky-600 dark:text-sky-300 font-semibold">
                       {formatMoney(item.totalRevenue)}
@@ -303,32 +338,40 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
                     </td>
 
                     {/* Net Profit */}
-                    <td
-                      className={`py-2.5 px-3 text-right font-bold ${
-                        isProfitable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                      }`}
-                    >
-                      {formatMoney(item.netProfit, true)}
+                    <td className="py-2.5 px-3 text-right font-bold">
+                      {isUnsoldStock ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-sans">
+                          In stock
+                        </span>
+                      ) : (
+                        <span className={item.netProfit > 0 ? "text-emerald-600 dark:text-emerald-400" : item.netProfit < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}>
+                          {formatMoney(item.netProfit, true)}
+                        </span>
+                      )}
                     </td>
 
                     {/* ROI */}
                     <td className="py-2.5 px-3 text-right">
-                      <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                          isProfitable
-                            ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60"
-                            : "bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60"
-                        }`}
-                      >
-                        {formatPercent(item.roi)}
-                      </span>
+                      {item.roi === null ? (
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">–</span>
+                      ) : (
+                        <span
+                          className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                            item.roi >= 0
+                              ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60"
+                              : "bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60"
+                          }`}
+                        >
+                          {formatPercent(item.roi)}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={10} className="py-8 text-center text-slate-400 dark:text-slate-500 font-sans">
+                <td colSpan={11} className="py-8 text-center text-slate-400 dark:text-slate-500 font-sans">
                   No transaction items found matching your filters.
                 </td>
               </tr>
