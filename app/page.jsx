@@ -384,7 +384,7 @@ export default function Dashboard() {
                 topProfitableItems={ledgerData.topProfitableItems}
               />
 
-              {/* 3. "What Went Where" Itemized Ledger Table */}
+              {/* 3. Itemized Ledger Table */}
               <ItemizedLedger ledgerItems={ledgerData.ledgerItems} />
 
               {/* 4. Raw Transaction Stream with Dual Timestamps */}

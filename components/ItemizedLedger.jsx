@@ -114,7 +114,7 @@ export default function ItemizedLedger({ ledgerItems = [] }) {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-base font-bold text-white tracking-tight">
-              &quot;What Went Where&quot; Itemized Ledger
+              Itemized Ledger
             </h2>
             <span className="text-xs bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded-full border border-slate-700">
               {filteredItems.length} items
