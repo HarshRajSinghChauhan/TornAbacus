@@ -34,6 +34,66 @@ export default function TransactionStream({ rawEvents = [] }) {
 
   const displayedEvents = filteredEvents.slice(0, limit);
 
+  // Compute total money transactions for the selected filter
+  const filterStats = React.useMemo(() => {
+    let totalExpense = 0;
+    let totalRevenue = 0;
+    let totalFees = 0;
+
+    for (const ev of filteredEvents) {
+      if (ev.action === "BOUGHT_ABROAD" || ev.action === "FLIGHT") {
+        totalExpense += Number(ev.totalCost || 0);
+      } else if (ev.action === "BAZAAR_SALE" || ev.action === "MARKET_SALE" || ev.action === "TRADE") {
+        totalRevenue += Number(ev.revenue || 0);
+        totalFees += Number(ev.fee || 0);
+      }
+    }
+
+    if (filterAction === "BOUGHT_ABROAD") {
+      return {
+        label: "Total Purchases",
+        formatted: `-${formatMoney(totalExpense)}`,
+        color: "text-rose-400 bg-rose-950/40 border-rose-800/60",
+      };
+    }
+
+    if (filterAction === "FLIGHT") {
+      return {
+        label: "Total Flight Cost",
+        formatted: `-${formatMoney(totalExpense)}`,
+        color: "text-purple-400 bg-purple-950/40 border-purple-800/60",
+      };
+    }
+
+    if (filterAction === "BAZAAR_SALE" || filterAction === "TRADE") {
+      return {
+        label: "Total Revenue",
+        formatted: `+${formatMoney(totalRevenue)}`,
+        color: "text-emerald-400 bg-emerald-950/40 border-emerald-800/60",
+      };
+    }
+
+    if (filterAction === "MARKET_SALE") {
+      const net = totalRevenue - totalFees;
+      return {
+        label: "Total Market Sales",
+        formatted: `+${formatMoney(net)}`,
+        color: "text-sky-400 bg-sky-950/40 border-sky-800/60",
+      };
+    }
+
+    // "ALL"
+    const net = totalRevenue - totalExpense - totalFees;
+    const isNetPositive = net >= 0;
+    return {
+      label: "Net Flow",
+      formatted: `${isNetPositive ? "+" : "-"}${formatMoney(Math.abs(net))}`,
+      color: isNetPositive
+        ? "text-emerald-400 bg-emerald-950/40 border-emerald-800/60"
+        : "text-rose-400 bg-rose-950/40 border-rose-800/60",
+    };
+  }, [filteredEvents, filterAction]);
+
   return (
     <div className="w-full bg-slate-900/80 border border-slate-800/80 rounded-xl my-6 overflow-hidden">
       
@@ -46,7 +106,7 @@ export default function TransactionStream({ rawEvents = [] }) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-white tracking-tight">
-                Raw Transaction Stream
+                Transaction Stream
               </h3>
               <span className="text-[11px] bg-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded-full border border-slate-700">
                 {rawEvents.length} events
@@ -70,25 +130,40 @@ export default function TransactionStream({ rawEvents = [] }) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs & Total Box */}
       {isOpen && (
-        <div className="px-4 py-2.5 bg-slate-950/30 border-b border-slate-800/60 flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-slate-500 mr-2 flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Filter:
-          </span>
-          {filters.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFilterAction(f.id)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                filterAction === f.id
-                  ? "bg-slate-800 text-white border border-slate-700"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="px-4 py-2 bg-slate-950/30 border-b border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          {/* Left: Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-slate-500 mr-1.5 flex items-center gap-1">
+              <Filter className="w-3 h-3" /> Filter:
+            </span>
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilterAction(f.id)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  filterAction === f.id
+                    ? "bg-slate-800 text-white border border-slate-700 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Selected Filter Total Box */}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 font-mono text-xs">
+            <div className={`px-2.5 py-1 rounded-lg border flex items-center gap-2 shadow-sm ${filterStats.color}`}>
+              <span className="text-[11px] font-sans font-medium text-slate-400">
+                {filterStats.label}:
+              </span>
+              <span className="font-bold tracking-tight">
+                {filterStats.formatted}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 

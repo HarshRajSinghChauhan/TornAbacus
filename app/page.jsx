@@ -387,7 +387,7 @@ export default function Dashboard() {
               {/* 3. Itemized Ledger Table */}
               <ItemizedLedger ledgerItems={ledgerData.ledgerItems} />
 
-              {/* 4. Raw Transaction Stream with Dual Timestamps */}
+              {/* 4. Transaction Stream with Dual Timestamps */}
               <TransactionStream rawEvents={ledgerData.rawEvents} />
             </>
           )
