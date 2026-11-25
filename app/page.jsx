@@ -10,6 +10,7 @@ import ItemizedLedger from "@/components/ItemizedLedger";
 import TransactionStream from "@/components/TransactionStream";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ErrorBanner from "@/components/ErrorBanner";
+import { SeoFaqSection } from "@/components/SeoFaqSection";
 
 import {
   getStoredApiKey,
@@ -395,6 +396,9 @@ export default function Dashboard() {
             </>
           )
         )}
+
+        {/* Informative SEO & FAQ Section for Crawlers & Users */}
+        <SeoFaqSection />
 
       </main>
 
