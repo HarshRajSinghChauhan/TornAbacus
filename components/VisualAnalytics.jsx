@@ -15,8 +15,11 @@ import {
 } from "recharts";
 import { formatCompactMoney, formatMoney, formatPercent } from "@/lib/utils";
 import { PieChart as PieIcon, BarChart3, TrendingUp, DollarSign } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function VisualAnalytics({ expenseBreakdown = [], topProfitableItems = [] }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const hasExpenses = expenseBreakdown && expenseBreakdown.length > 0;
   const hasItems = topProfitableItems && topProfitableItems.length > 0;
 
@@ -26,24 +29,24 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
     0
   );
 
-  // Custom Dark Tooltip for Donut
+  // Tooltip for Donut Chart
   const CustomPieTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       const pct = totalExpenses > 0 ? ((data.value / totalExpenses) * 100).toFixed(1) : 0;
       return (
-        <div className="bg-slate-950 border border-slate-700/80 p-2.5 rounded-lg shadow-xl text-xs">
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/80 p-2.5 rounded-lg shadow-xl text-xs transition-colors">
           <div className="flex items-center gap-2 mb-1">
             <span
               className="w-2.5 h-2.5 rounded-full"
               style={{ backgroundColor: data.payload.color }}
             />
-            <span className="font-semibold text-slate-200">{data.name}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{data.name}</span>
           </div>
-          <div className="font-mono text-white text-sm font-bold">
+          <div className="font-mono text-slate-900 dark:text-white text-sm font-bold">
             {formatMoney(data.value)}
           </div>
-          <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">
             {pct}% of total costs
           </div>
         </div>
@@ -52,35 +55,35 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
     return null;
   };
 
-  // Custom Dark Tooltip for Bar Chart
+  // Tooltip for Bar Chart
   const CustomBarTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
       return (
-        <div className="bg-slate-950 border border-slate-700/80 p-3 rounded-lg shadow-xl text-xs space-y-1">
-          <div className="font-bold text-slate-200 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/80 p-3 rounded-lg shadow-xl text-xs space-y-1 transition-colors">
+          <div className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
             <span>{item.name}</span>
             {item.country && (
-              <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
                 {item.country}
               </span>
             )}
           </div>
-          <div className="flex justify-between gap-4 pt-1 border-t border-slate-800 text-slate-400">
+          <div className="flex justify-between gap-4 pt-1 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
             <span>Net Profit:</span>
-            <span className="font-mono font-bold text-emerald-400">
+            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
               {formatMoney(item.profit)}
             </span>
           </div>
-          <div className="flex justify-between gap-4 text-slate-400">
+          <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-400">
             <span>Revenue:</span>
-            <span className="font-mono text-sky-300">
+            <span className="font-mono text-sky-600 dark:text-sky-300">
               {formatMoney(item.revenue)}
             </span>
           </div>
-          <div className="flex justify-between gap-4 text-slate-400">
+          <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-400">
             <span>Cost:</span>
-            <span className="font-mono text-rose-300">
+            <span className="font-mono text-rose-600 dark:text-rose-300">
               {formatMoney(item.cost)}
             </span>
           </div>
@@ -94,15 +97,15 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 my-4">
       
       {/* Donut Chart: Expense Breakdown (5 cols) */}
-      <div className="lg:col-span-5 bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between">
+      <div className="lg:col-span-5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-sm transition-colors duration-150">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">
+            <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
               <PieIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Expense Breakdown</h3>
-              <p className="text-[11px] text-slate-400">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-200">Expense Breakdown</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Inventory vs Flight Tickets vs Market Fees
               </p>
             </div>
@@ -128,7 +131,7 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
                       <Cell
                         key={`cell-${index}`}
                         fill={entry.color}
-                        stroke="#090d16"
+                        stroke={isDark ? "#090d16" : "#ffffff"}
                         strokeWidth={2}
                       />
                     ))}
@@ -139,16 +142,16 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
 
               {/* Inside Donut Center Badge */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none">
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold block">
                   Total Costs
                 </span>
-                <span className="text-sm sm:text-base font-black font-mono text-white tracking-tight">
+                <span className="text-sm sm:text-base font-black font-mono text-slate-900 dark:text-white tracking-tight">
                   {formatCompactMoney(totalExpenses)}
                 </span>
               </div>
             </>
           ) : (
-            <div className="text-center text-xs text-slate-500 py-10">
+            <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-10">
               No expenses recorded in selected time window
             </div>
           )}
@@ -156,28 +159,28 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
 
         {/* Detailed Legend with Names, Exact Numbers, and Percentages */}
         {hasExpenses && (
-          <div className="pt-2 border-t border-slate-800/80 flex flex-col gap-1.5">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex flex-col gap-1.5">
             {expenseBreakdown.map((item) => {
               const pct = totalExpenses > 0 ? ((item.value / totalExpenses) * 100).toFixed(1) : 0;
               return (
                 <div
                   key={item.name}
-                  className="flex items-center justify-between bg-slate-950/40 border border-slate-800/60 px-2.5 py-1.5 rounded-lg text-xs hover:border-slate-700 transition-colors"
+                  className="flex items-center justify-between bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 px-2.5 py-1.5 rounded-lg text-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-slate-300 font-medium text-[11px]">
+                    <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">
                       {item.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 font-mono">
-                    <span className="text-white font-semibold text-xs">
+                    <span className="text-slate-900 dark:text-white font-semibold text-xs">
                       {formatMoney(item.value)}
                     </span>
-                    <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-sans">
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 bg-slate-200/70 dark:bg-slate-800 px-1.5 py-0.5 rounded font-sans">
                       {pct}%
                     </span>
                   </div>
@@ -189,15 +192,15 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
       </div>
 
       {/* Bar Chart: Top Profitable Items (7 cols) */}
-      <div className="lg:col-span-7 bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between">
+      <div className="lg:col-span-7 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-sm transition-colors duration-150">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <BarChart3 className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Top Profitable Items</h3>
-              <p className="text-[11px] text-slate-400">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-200">Top Profitable Items</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Highest net profit generators (Revenue - Costs - Fees)
               </p>
             </div>
@@ -211,17 +214,17 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
                 data={topProfitableItems}
                 margin={{ top: 10, right: 10, left: -10, bottom: 25 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: "#94a3b8", fontSize: 10 }}
+                  tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 10 }}
                   interval={0}
                   angle={-18}
                   textAnchor="end"
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#94a3b8", fontSize: 10 }}
+                  tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 10 }}
                   tickFormatter={(val) => formatCompactMoney(val)}
                   axisLine={false}
                   tickLine={false}
@@ -236,7 +239,7 @@ export default function VisualAnalytics({ expenseBreakdown = [], topProfitableIt
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-full text-center text-xs text-slate-500 py-10">
+            <div className="flex items-center justify-center h-full text-center text-xs text-slate-400 dark:text-slate-500 py-10">
               No profitable items recorded in this range
             </div>
           )}
