@@ -17,6 +17,7 @@ import {
   clearStoredApiKey,
   testApiKey,
   fetchUserLogs,
+  getMaxPagesForPreset,
 } from "@/lib/tornApi";
 import { getTimeRangeTimestamps } from "@/lib/time";
 import { processTornLogs } from "@/lib/logParser";
@@ -93,7 +94,8 @@ export default function Dashboard() {
         );
         setRangeDetails(timestamps);
 
-        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to);
+        const maxPages = getMaxPagesForPreset(presetToUse);
+        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to, maxPages);
         const parsed = processTornLogs(logs);
         setLedgerData(parsed);
       } catch (err) {
@@ -140,7 +142,8 @@ export default function Dashboard() {
         );
         setRangeDetails(timestamps);
 
-        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to);
+        const maxPages = getMaxPagesForPreset(presetToUse);
+        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to, maxPages);
         const parsed = processTornLogs(logs);
         setLedgerData(parsed);
       } catch (err) {
