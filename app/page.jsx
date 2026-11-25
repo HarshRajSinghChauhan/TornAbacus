@@ -31,7 +31,7 @@ export default function Dashboard() {
   const [playerInfo, setPlayerInfo] = useState(null);
   const [isTestingKey, setIsTestingKey] = useState(false);
 
-  const [activePreset, setActivePreset] = useState("last7d");
+  const [activePreset, setActivePreset] = useState("today");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [rangeDetails, setRangeDetails] = useState(null);
 
@@ -45,7 +45,7 @@ export default function Dashboard() {
     if (stored) {
       setApiKey(stored);
       setIsDemoMode(false);
-      validateAndFetch(stored, "last7d");
+      validateAndFetch(stored, "today");
     } else {
       // If no key found, activate demo mode so the user immediately gets a rich dashboard
       setIsDemoMode(true);
