@@ -77,7 +77,38 @@ export default function Dashboard() {
     }, 250);
   }, []);
 
-  // Validate API Key and fetch live data
+  // Fetch financial logs only (1 single API call, preserves API rate limits)
+  const fetchLogsOnly = useCallback(
+    async (keyToUse, presetToUse = activePreset) => {
+      if (!keyToUse) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const timestamps = getTimeRangeTimestamps(
+          presetToUse,
+          customRange.start,
+          customRange.end
+        );
+        setRangeDetails(timestamps);
+
+        const logs = await fetchUserLogs(keyToUse, timestamps.from, timestamps.to);
+        const parsed = processTornLogs(logs);
+        setLedgerData(parsed);
+      } catch (err) {
+        setError(err.message || "Failed to load logs from Torn API");
+        if (err.code === 2 || err.code === 16) {
+          setKeyStatus("invalid");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [activePreset, customRange]
+  );
+
+  // Validate API Key and fetch live data (Used on initial load or key change)
   const validateAndFetch = useCallback(
     async (keyToUse, presetToUse = activePreset) => {
       if (!keyToUse) return;
@@ -114,7 +145,7 @@ export default function Dashboard() {
         setLedgerData(parsed);
       } catch (err) {
         setError(err.message || "Failed to load data from Torn API");
-        setKeyStatus(err.code === 2 ? "invalid" : "connected");
+        setKeyStatus(err.code === 2 || err.code === 16 ? "invalid" : "connected");
       } finally {
         setIsLoading(false);
         setIsTestingKey(false);
@@ -147,7 +178,11 @@ export default function Dashboard() {
       // Switching off demo mode
       if (apiKey) {
         setIsDemoMode(false);
-        validateAndFetch(apiKey);
+        if (playerInfo) {
+          fetchLogsOnly(apiKey);
+        } else {
+          validateAndFetch(apiKey);
+        }
       } else {
         setIsDemoMode(false);
         setKeyStatus("none");
@@ -167,7 +202,11 @@ export default function Dashboard() {
     if (isDemoMode) {
       loadDemoData();
     } else if (apiKey) {
-      validateAndFetch(apiKey, preset);
+      if (keyStatus === "connected" && playerInfo) {
+        fetchLogsOnly(apiKey, preset);
+      } else {
+        validateAndFetch(apiKey, preset);
+      }
     }
   };
 
@@ -181,7 +220,11 @@ export default function Dashboard() {
     if (isDemoMode) {
       loadDemoData();
     } else if (apiKey) {
-      validateAndFetch(apiKey);
+      if (keyStatus === "connected" && playerInfo) {
+        fetchLogsOnly(apiKey, activePreset);
+      } else {
+        validateAndFetch(apiKey, activePreset);
+      }
     }
   };
 
